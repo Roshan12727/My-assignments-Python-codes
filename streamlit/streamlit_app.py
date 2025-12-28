@@ -2,13 +2,69 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
+import os
+from pathlib import Path
 
 # Load the trained model and scaler
 @st.cache_resource
 def load_model_and_scaler():
-    model = joblib.load('logistic_regression_model.joblib')
-    scaler = joblib.load('scaler.joblib')
-    return model, scaler
+    """Load model and scaler from multiple possible locations"""
+    
+    # Define possible paths to search for model files
+    possible_paths = [
+        # Current directory
+        Path('.'),
+        # Script directory
+        Path(__file__).parent,
+        # Parent directory (in case app is in subdirectory)
+        Path(__file__).parent.parent,
+        # Streamlit subdirectory
+        Path(__file__).parent / 'streamlit',
+        # Root of repository
+        Path(__file__).parent.parent / 'streamlit',
+    ]
+    
+    model_file = None
+    scaler_file = None
+    
+    # Search for model files
+    for base_path in possible_paths:
+        model_path = base_path / 'logistic_regression_model.joblib'
+        scaler_path = base_path / 'scaler.joblib'
+        
+        if model_path.exists() and scaler_path.exists():
+            model_file = model_path
+            scaler_file = scaler_path
+            break
+    
+    # If files not found, show helpful error message
+    if model_file is None or scaler_file is None:
+        st.error("""
+        ### Model files not found!
+        
+        Please ensure the following files are in the same directory as `streamlit_app.py`:
+        - `logistic_regression_model.joblib`
+        - `scaler.joblib`
+        
+        **To generate these files:**
+        1. Run `python train_model.py` in your project directory
+        2. Upload the generated `.joblib` files to your GitHub repository
+        3. Make sure they're in the same folder as `streamlit_app.py`
+        
+        **Current search paths:**
+        """)
+        for p in possible_paths:
+            st.write(f"- {p.absolute()}")
+        st.stop()
+    
+    # Load the model and scaler
+    try:
+        model = joblib.load(model_file)
+        scaler = joblib.load(scaler_file)
+        return model, scaler
+    except Exception as e:
+        st.error(f"Error loading model files: {str(e)}")
+        st.stop()
 
 model, scaler = load_model_and_scaler()
 
