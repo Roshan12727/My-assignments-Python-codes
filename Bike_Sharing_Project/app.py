@@ -1,9 +1,9 @@
 import os
 
-# Corrected model loading path
+# Define paths
 model_path = 'best_random_forest.joblib'
 
-# Proper CSV file access with os.path
-csv_path = os.path.join('data', 'input.csv')  # Assuming the CSV file is in a 'data' directory
+# Ensure proper CSV path handling
+csv_path = os.path.join(os.path.dirname(__file__), 'processed_bike_data.csv')
 
-# Rest of your code...
+# Load your model here and any other processing needed
